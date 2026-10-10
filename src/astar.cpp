@@ -6,38 +6,55 @@
 #include <queue>
 #include <vector>
 #include <cstddef>
+#include <tuple>
+
+using namespace std;
 
 namespace {
 
-bool samePosition(const Position& a, const Position& b) {
+bool samePosition(Position a, Position b) {
     return a.row == b.row && a.col == b.col;
 }
 
-std::vector<Position> reconstructPath(
+vector<Position> reconstructPath(
     Position start,
     Position goal,
-    const std::vector<std::vector<Position>>& parent,
-    const std::vector<std::vector<bool>>& hasParent
+    const vector<vector<Position>>& parent,
+    const vector<vector<bool>>& hasParent
 ) {
-    std::vector<Position> path;
+    vector<Position> path;
     Position current = goal;
 
-    path.push_back(current);
-
     while (!samePosition(current, start)) {
+        path.push_back(current);
+
         if (!hasParent[current.row][current.col]) {
             return {};
         }
 
         current = parent[current.row][current.col];
-        path.push_back(current);
     }
 
-    std::reverse(path.begin(), path.end());
+    path.push_back(start);
+    reverse(path.begin(), path.end());
+
     return path;
 }
 
-} // namespace
+struct Compare {
+    bool operator()(
+        const tuple<int, size_t, Position>& a,
+        const tuple<int, size_t, Position>& b
+    ) const {
+        if (get<0>(a) != get<0>(b)) {
+            return get<0>(a) > get<0>(b);
+        }
+
+        return get<1>(a) > get<1>(b);
+    }
+};
+
+} 
 
 SearchResult aStar(const Grid& grid) {
     SearchResult result{};
@@ -53,39 +70,27 @@ SearchResult aStar(const Grid& grid) {
     int rows = grid.getRows();
     int cols = grid.getCols();
 
-    using Entry = std::tuple<int, std::size_t, Position>;
+    const int INF = 1000000000;
 
-    struct Compare {
-        bool operator()(const Entry& a, const Entry& b) const {
-            if (std::get<0>(a) != std::get<0>(b)) {
-                return std::get<0>(a) > std::get<0>(b);
-            }
+    vector<vector<int>> gScore(
+        rows, vector<int>(cols, INF)
+    );
 
-            return std::get<1>(a) > std::get<1>(b);
-        }
-    };
+    vector<vector<Position>> parent(
+        rows, vector<Position>(cols, start)
+    );
 
-    std::priority_queue<
-        Entry,
-        std::vector<Entry>,
+    vector<vector<bool>> hasParent(
+        rows, vector<bool>(cols, false)
+    );
+
+    priority_queue<
+        tuple<int, size_t, Position>,
+        vector<tuple<int, size_t, Position>>,
         Compare
     > frontier;
 
-    const int INF = 1000000000;
-
-    std::vector<std::vector<int>> gScore(
-        rows, std::vector<int>(cols, INF)
-    );
-
-    std::vector<std::vector<Position>> parent(
-        rows, std::vector<Position>(cols, {-1, -1})
-    );
-
-    std::vector<std::vector<bool>> hasParent(
-        rows, std::vector<bool>(cols, false)
-    );
-
-    std::size_t order = 0;
+    size_t order = 0;
 
     gScore[start.row][start.col] = 0;
 
@@ -98,11 +103,11 @@ SearchResult aStar(const Grid& grid) {
     result.maxFrontierSize = frontier.size();
 
     while (!frontier.empty()) {
-        Entry entry = frontier.top();
+        auto currentEntry = frontier.top();
         frontier.pop();
 
-        int currentF = std::get<0>(entry);
-        Position current = std::get<2>(entry);
+        int currentF = get<0>(currentEntry);
+        Position current = get<2>(currentEntry);
 
         int currentG = gScore[current.row][current.col];
 
@@ -111,6 +116,7 @@ SearchResult aStar(const Grid& grid) {
             continue;
         }
 
+        
         if (samePosition(current, goal)) {
             result.path = reconstructPath(
                 start, goal, parent, hasParent
@@ -124,7 +130,7 @@ SearchResult aStar(const Grid& grid) {
             return result;
         }
 
-        ++result.expandedNodes;
+        result.expandedNodes++;
 
         for (Position neighbor : grid.getNeighbors(current)) {
             int newG = currentG + 1;
@@ -144,7 +150,7 @@ SearchResult aStar(const Grid& grid) {
                     neighbor
                 });
 
-                result.maxFrontierSize = std::max(
+                result.maxFrontierSize = max(
                     result.maxFrontierSize,
                     frontier.size()
                 );
