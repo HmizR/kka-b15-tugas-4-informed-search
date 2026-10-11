@@ -91,8 +91,20 @@ int main(int argc, char* argv[]) {
                       << std::setw(9) << "Found" << std::setw(12) << "Path Cost"
                       << std::setw(17) << "Expanded Nodes"
                       << std::setw(19) << "Max Frontier Size" << "Average Time (us)\n";
-            report(csv, cases[i].name, "A*", measure(aStar, grids[i], repetitions));
-            report(csv, cases[i].name, "GBFS", measure(gbfs, grids[i], repetitions));
+            const Measurement astarResult = measure(aStar, grids[i], repetitions);
+            const Measurement gbfsResult = measure(gbfs, grids[i], repetitions);
+
+            report(csv, cases[i].name, "A*", astarResult);
+            report(csv, cases[i].name, "GBFS", gbfsResult);
+
+            std::cout << "\nGrid awal:\n";
+            grids[i].print();
+
+            std::cout << "\nPath A*:\n";
+            grids[i].printWithPath(astarResult.result.path);
+
+            std::cout << "\nPath GBFS:\n";
+            grids[i].printWithPath(gbfsResult.result.path);
         }
         csv.flush();
         if (!csv) throw std::runtime_error("Failed to write comparison CSV.");
