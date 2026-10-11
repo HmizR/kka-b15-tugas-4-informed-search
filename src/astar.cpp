@@ -150,9 +150,9 @@ SearchResult aStar(const Grid& grid) {
                     neighbor
                 });
 
-                result.maxFrontierSize = max(
+                result.maxFrontierSize = std::max(
                     result.maxFrontierSize,
-                    frontier.size()
+                    static_cast<int>(frontier.size())
                 );
             }
         }

@@ -1,0 +1,11 @@
+Case,Algorithm,Found,PathCost,ExpandedNodes,MaxFrontierSize,AverageTimeUs
+Simple,A*,true,11,36,6,9.017
+Simple,GBFS,true,11,11,9,2.864
+Moderate,A*,true,22,85,7,19.237
+Moderate,GBFS,true,22,22,7,4.197
+Misleading,A*,true,22,54,23,14.753
+Misleading,GBFS,true,34,48,25,9.959
+Dense,A*,true,174,174,1,27.655
+Dense,GBFS,true,174,174,1,22.701
+Large,A*,true,58,481,48,112.626
+Large,GBFS,true,60,62,46,14.158
